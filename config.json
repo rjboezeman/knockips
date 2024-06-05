@@ -1,3 +1,4 @@
 {
-    "logfile": "/var/log/shorewall.log"
+    "logfile": "/var/log/shorewall.log",
+    "error_log_entry": "ERROR:TAIL_LOGFILE"
 }
