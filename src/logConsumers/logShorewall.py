@@ -1,9 +1,18 @@
-from config import log_queue, shutdown_event, ERROR_LOG_ENTRY
+from config import multiQueue, shutdown_event, ERROR_LOG_ENTRY
+from utils.geoiplookup import GeoIPLookup
 import re
 
+try:
+    geoDb = GeoIPLookup()
+except FileNotFoundError:
+    print("Error: GeoIP database file not found. Exiting...")
+    exit(1)
+
+queue = multiQueue.signup()
+
 async def log_consumer():
-    while not shutdown_event.is_set() or not log_queue.empty():
-        log_line = await log_queue.get()
+    while not shutdown_event.is_set() or not multiQueue.empty(queue):
+        log_line = await multiQueue.get(queue) # with peek we don't actually remove the item from the queue
         if log_line == ERROR_LOG_ENTRY:
             print("Received error signal, shutting down log consumer.")
             shutdown_event.set()
@@ -29,6 +38,8 @@ def parse_shorewall_log(log_line):
     
     # If a match is found, return the extracted fields as a dictionary
     if match:
-        return match.groupdict()
+        output = match.groupdict()
+        output['country'] = geoDb.get_country_by_ip(output['source_IP'])
+        return output
     else:
         return None

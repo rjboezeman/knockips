@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebSocket Log Viewer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            color: #333;
+            margin-top: 20px;
+        }
+
+        #logs-container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 20px 0;
+            background: #fff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border-radius: 5px;
+            overflow-x: auto; /* Add horizontal scroll if needed */
+        }
+
+        #logs {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        #logs th, #logs td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+
+        #logs tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        .closed {
+            color: red;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .buttons {
+            margin: 20px;
+        }
+
+        .buttons button {
+            padding: 10px 20px;
+            margin: 0 10px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .buttons button:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+    </style>
+</head>
+<body>
+    <h1>Log Viewer</h1>
+    <div class="buttons">
+        <button id="connect" onclick="connect()">Connect</button>
+        <button id="disconnect" onclick="disconnect()" disabled>Disconnect</button>
+        <button id="clear" onclick="clearLogs()">Clear</button>
+    </div>
+    <div id="logs-container">
+        <table id="logs">
+            <thead>
+                <tr id="logs-header"></tr>
+            </thead>
+            <tbody id="logs-body"></tbody>
+        </table>
+    </div>
+
+    <script>
+        const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsHost = window.location.host;
+        const wsUrl = `${wsProtocol}//${wsHost}/ws/logs`;
+        
+        let ws;
+
+        function connect() {
+            ws = new WebSocket(wsUrl);
+
+            ws.onopen = function(event) {
+                document.getElementById("connect").disabled = true;
+                document.getElementById("disconnect").disabled = false;
+            };
+
+            ws.onmessage = function(event) {
+                let logData = JSON.parse(event.data);
+                let logsHeader = document.getElementById("logs-header");
+                let logsBody = document.getElementById("logs-body");
+
+                // If header is empty, populate it with keys from the first logData
+                if (!logsHeader.hasChildNodes()) {
+                    for (const key of Object.keys(logData)) {
+                        let th = document.createElement("th");
+                        th.textContent = key;
+                        logsHeader.appendChild(th);
+                    }
+                }
+
+                let logEntry = document.createElement("tr");
+                for (const value of Object.values(logData)) {
+                    let td = document.createElement("td");
+                    td.textContent = value;
+                    logEntry.appendChild(td);
+                }
+
+                logsBody.appendChild(logEntry);
+            };
+
+            ws.onclose = function(event) {
+                let logsBody = document.getElementById("logs-body");
+                let log = document.createElement("tr");
+                let td = document.createElement("td");
+                td.colSpan = document.getElementById("logs-header").childElementCount;
+                td.textContent = "WebSocket connection closed.";
+                td.classList.add("closed");
+                log.appendChild(td);
+                logsBody.appendChild(log);
+                document.getElementById("connect").disabled = false;
+                document.getElementById("disconnect").disabled = true;
+            };
+        }
+
+        function disconnect() {
+            if (ws) {
+                ws.close();
+            }
+        }
+
+        function clearLogs() {
+            document.getElementById("logs-header").innerHTML = "";
+            document.getElementById("logs-body").innerHTML = "";
+        }
+
+        // Auto-connect on page load
+        connect();
+    </script>
+</body>
+</html>
