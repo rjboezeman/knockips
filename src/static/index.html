@@ -18,6 +18,14 @@
             margin-top: 20px;
         }
 
+        #max-rows {
+            width: 50px;
+            padding: 5px;
+            font-size: 16px;
+            margin-left: 10px;
+            text-align: center;
+        }
+
         #logs-container {
             width: 90%;
             max-width: 1200px;
@@ -53,11 +61,10 @@
             margin: 20px;
         }
 
-        .buttons button {
+        .buttons button, .buttons input {
             padding: 10px 20px;
             margin: 0 10px;
             font-size: 16px;
-            cursor: pointer;
         }
 
         .buttons button:disabled {
@@ -72,6 +79,8 @@
         <button id="connect" onclick="connect()">Connect</button>
         <button id="disconnect" onclick="disconnect()" disabled>Disconnect</button>
         <button id="clear" onclick="clearLogs()">Clear</button>
+        <label for="max-rows">Max Rows:</label>
+        <input type="number" id="max-rows" min="1" value="20">
     </div>
     <div id="logs-container">
         <table id="logs">
@@ -120,8 +129,9 @@
 
                 logsBody.appendChild(logEntry);
 
-                // Ensure the table length never exceeds the inner window height
-                while (logsBody.scrollHeight > window.innerHeight) {
+                // Check if the number of rows exceeds the max rows
+                const maxRows = parseInt(document.getElementById("max-rows").value);
+                while (logsBody.rows.length > maxRows) {
                     logsBody.removeChild(logsBody.firstChild);
                 }
             };
