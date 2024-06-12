@@ -1,28 +1,36 @@
-from config import multiQueue, shutdown_event, ERROR_LOG_ENTRY
+from utils.knockIPBase import KnockIPBase
+from utils.logger import log
 import os
 import asyncio
 import aiofiles
+from config import log_file
 
-queue = multiQueue.signup()
 
-async def tail_logfile(logfile: str):
-    if not os.path.isfile(logfile):
-        print(f"Error: The log file '{logfile}' does not exist.")
-        await multiQueue.put(ERROR_LOG_ENTRY)
-        shutdown_event.set()
-        return
+class LocalFile(KnockIPBase):
 
-    try:
-        async with aiofiles.open(logfile, mode='r') as f:
-            # Go to the end of the file
-            await f.seek(0, 2)
-            while not shutdown_event.is_set():
-                line = await f.readline()
-                if not line:
-                    await asyncio.sleep(0.1)
-                    continue
-                await multiQueue.put(line.strip())
-    except Exception as e:
-        print(f"Error: {e}")
-        await multiQueue.put(ERROR_LOG_ENTRY)
-        shutdown_event.set()
+    async def tail_log_file(self, log_file: str):
+        if not os.path.isfile(log_file):
+            log.error(f"Error: The log file '{log_file}' does not exist.")
+            await self.do_shutdown()
+            return
+
+        try:
+            async with aiofiles.open(log_file, mode='r') as f:
+                # Go to the end of the file:
+                await f.seek(0, 2)
+                while not self.shutdown_event.is_set():
+                    line = await f.readline()
+                    if not line:
+                        await asyncio.sleep(0.5)
+                        continue
+                    await self.put(line.strip())
+        except Exception as e:
+            log.error(f"Error: {e}")
+            self.do_shutdown()
+
+    async def process_log_line(log_line):
+        pass
+
+    async def run(self):
+        await self.tail_log_file(log_file)
+        

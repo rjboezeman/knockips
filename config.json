@@ -1,5 +1,6 @@
 {
-    "logfile": "/var/log/shorewall.log",
+    "log_file": "/var/log/shorewall.log",
     "error_log_entry": "ERROR:TAIL_LOGFILE",
-    "geo_ip_db": "GeoLite2-Country.mmdb"
+    "geo_ip_country_db": "GeoLite2-Country.mmdb",
+    "geo_ip_city_db": "GeoLite2-City.mmdb"
 }
