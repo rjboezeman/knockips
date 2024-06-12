@@ -1,4 +1,5 @@
 import logging
+from config import loglevel
 
 class ColorFormatter(logging.Formatter):
     # Define your color codes for different log levels
@@ -18,7 +19,6 @@ class ColorFormatter(logging.Formatter):
         return super().format(record)
 
 # Setup the logger
-loglevel = logging.INFO
 log = logging.getLogger('knockip')
 
 log.setLevel(loglevel)

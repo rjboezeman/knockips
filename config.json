@@ -1,6 +1,18 @@
 {
+    "all_loglevels": {
+        "DEBUG": 10,
+        "INFO": 20,
+        "WARNING": 30,
+        "ERROR": 40,
+        "CRITICAL": 50
+    },
+    "loglevel": 20,
     "log_file": "/var/log/shorewall.log",
-    "error_log_entry": "ERROR:TAIL_LOGFILE",
+    "tcp_port": 8000,
+    "ipset_badguys": "badguys",
+    "ipset_goodguys": "sshtrusted",
+    "error_log_entry": "ERROR:ABORTNOWPLEASE",
     "geo_ip_country_db": "GeoLite2-Country.mmdb",
-    "geo_ip_city_db": "GeoLite2-City.mmdb"
+    "geo_ip_city_db": "GeoLite2-City.mmdb",
+    "knock_sequence" : [ 1234, 5678 ]
 }

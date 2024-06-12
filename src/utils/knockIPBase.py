@@ -9,27 +9,24 @@ import asyncio
 class KnockIPBase(ABC):
 
     def __init__(self, multi_queue: MultiQueue, shutdown_event: asyncio.Event):
+        log.debug(f"Initializing {self.__class__.__name__}")
         self.multi_queue = multi_queue
-        self.queue = multi_queue.signup()
         self.shutdown_event = shutdown_event
         self.geo_ip_lookup = GeoIPLookup()
-
+        self.log_processor = None
 
     async def put(self, item):
         await self.multi_queue.put(item)
 
     async def get(self):
-        item = await self.multi_queue.get(self.queue)
-        if self.log_processor:
-            return self.log_processor.process_log_line(item)
-        else:
-            return item
+        return await self.multi_queue.get(self.queue)
 
     def signup(self):
-        pass
+        self.queue = self.multi_queue.signup()
 
     def signout(self):
         self.multi_queue.signout(self.queue)
+        self.queue = None
 
     def is_shutting_down(self):
         return self.shutdown_event.is_set()
@@ -43,18 +40,34 @@ class KnockIPBase(ABC):
     
     # override this function in child class if needed.
     async def run(self):
+        self.signup()
         while not self.shutdown_event.is_set() or not self.multi_queue.empty(queue):
             log_line = await self.multi_queue.get(self.queue) # with peek we don't actually remove the item from the queue
             if log_line == ERROR_LOG_ENTRY:
                 log.error("Received error signal, shutting down...")
                 self.shutdown_event.set()
                 break
-            processed_successfully = self.process_log_line(log_line)
-            if processed_successfully:
-                pass
+            if self.log_processor:
+                log.debug(f"{self.__class__.__name__} process_log_line: calling processor of {self.log_processor.__class__.__name__} with: {log_line}")
+                output = await self.log_processor.process_log_line(log_line)
             else:
-                log.error(f"Failed to parse log line: {log_line}")
+                output = await self.process_log_line(log_line)
+            if output:
+                await self.take_action(output)
+            else:
+                log.error(f"Failed to process log line ({self.__class__.__name__}): {log_line}")
+        self.signout()
     
+    def get_country_by_ip(self, ip):
+        return self.geo_ip_lookup.get_country_by_ip(ip)
+
+    def get_city_by_ip(self, ip):
+        return self.geo_ip_lookup.get_city_by_ip(ip)
+
     @abstractmethod
     async def process_log_line(self):
+        pass
+
+    @abstractmethod
+    async def take_action(self):
         pass

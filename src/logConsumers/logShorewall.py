@@ -6,15 +6,9 @@ import re
 
 
 class ShorewallLogger(KnockIPBase):
-    def __init__(self, multi_queue, shutdown_event):
-        try:
-            super().__init__(multi_queue, shutdown_event)
-            self.geoDb = GeoIPLookup()
-        except FileNotFoundError:
-            log.error("Error: GeoIP database file not found. Exiting...")
-            exit(1)
 
-    def process_log_line(self, log_line):
+    async def process_log_line(self, log_line):
+        log.debug('ShorewallLogger process_log_line: ' + log_line)
         # Define the regular expression pattern to extract the required fields
         pattern = (
             r'SRC=(?P<source_IP>\d{1,3}(?:\.\d{1,3}){3}) '
@@ -29,8 +23,11 @@ class ShorewallLogger(KnockIPBase):
         # If a match is found, return the extracted fields as a dictionary
         if match:
             output = match.groupdict()
-            output['country'] = self.geoDb.get_country_by_ip(output['source_IP'])
-            output['city'] = self.geoDb.get_city_by_ip(output['source_IP'])
+            output['country'] = self.get_country_by_ip(output['source_IP'])
+            output['city'] = self.get_city_by_ip(output['source_IP'])
             return output
         else:
             return None
+        
+    async def take_action(self, output):
+        log.debug(f"ShorewallLogger take_action: Country: {output['country']}, City: {output['city']}, Source IP: {output['source_IP']}, Destination IP: {output['dest_IP']}, Source Port: {output['source_PORT']}, Destination Port: {output['target_PORT']}")

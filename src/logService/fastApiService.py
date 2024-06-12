@@ -6,6 +6,7 @@ from pydantic import BaseModel
 from utils.knockIPBase import KnockIPBase
 import logging
 from utils.logger import log, loglevel, handler
+from config import tcp_port
 import asyncio
 
 class LogItem(BaseModel):
@@ -26,16 +27,18 @@ class FastAPILogService(KnockIPBase):
         @self.app.websocket("/ws/logs")
         async def websocket_endpoint(websocket: WebSocket):
             await websocket.accept()
+            self.signup()
             send_task = asyncio.create_task(self.send_logs(websocket))
             receive_task = asyncio.create_task(self.receive_logs(websocket))
             try:
                 await asyncio.gather(send_task, receive_task)
             except WebSocketDisconnect:
-                log.error("WebSocket disconnected")
+                log.warning("WebSocket disconnected")
                 self.signout()
             finally:
                 send_task.cancel()
                 receive_task.cancel()
+                self.signout()
 
         # Adding the routes after defining them
         self.app.add_api_route("/", read_root)
@@ -43,7 +46,8 @@ class FastAPILogService(KnockIPBase):
 
     async def send_logs(self, websocket: WebSocket):
         while True:
-            dict_item = await self.get()
+            log_line = await self.get()
+            dict_item = await self.log_processor.process_log_line(log_line)
             await websocket.send_json(dict_item)
 
     async def receive_logs(self, websocket: WebSocket):
@@ -53,10 +57,11 @@ class FastAPILogService(KnockIPBase):
 
     async def process_received_data(self, data):
         # Process the received data here
-        log.info(f"Received data: {data}")
+        # log.info(f"Received data: {data}")
+        pass
 
     async def start_uvicorn(self):
-        config = Config(self.app, host="0.0.0.0", port=8000, loop="asyncio")
+        config = Config(self.app, host="0.0.0.0", port=tcp_port, loop="asyncio")
         server = Server(config)
         uvicorn_logger = ['uvicorn', 'uvicorn.error', 'uvicorn.access', 'uvicorn.asgi']
         for logger_name in uvicorn_logger:
@@ -76,7 +81,10 @@ class FastAPILogService(KnockIPBase):
             await server_task
 
     async def process_log_line(self, log_line):
-        pass
+        log.debug('FastAPILogService process_log_line: ' + log_line)
+
+    async def take_action(self, output):
+        log.debug('FastAPILogService take_action: ' + output)
 
     async def run(self):
         await self.start_uvicorn()

@@ -119,6 +119,11 @@
                 }
 
                 logsBody.appendChild(logEntry);
+
+                // Ensure the table length never exceeds the inner window height
+                while (logsBody.scrollHeight > window.innerHeight) {
+                    logsBody.removeChild(logsBody.firstChild);
+                }
             };
 
             ws.onclose = function(event) {

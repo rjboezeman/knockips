@@ -5,6 +5,7 @@ import sys
 
 from logReaders.localFile import LocalFile
 from logConsumers.logShorewall import ShorewallLogger
+from logConsumers.manageIPset import IPSetManager
 from logService.fastApiService import FastAPILogService
 from config import log_file, shutdown_event, multi_queue, ERROR_LOG_ENTRY
 from utils.logger import log
@@ -20,11 +21,15 @@ async def main():
     shorewall_logger = ShorewallLogger(multi_queue, shutdown_event)
     fast_api_service = FastAPILogService(multi_queue, shutdown_event)
     fast_api_service.set_log_processor(shorewall_logger)
+    ipset_manager = IPSetManager(multi_queue, shutdown_event)
+    ipset_manager.set_log_processor(shorewall_logger)
+
     
     await asyncio.gather(
         local_file.run(),
         shorewall_logger.run(),
-        fast_api_service.run()
+        fast_api_service.run(),
+        ipset_manager.run()
     )
 
 if __name__ == "__main__":

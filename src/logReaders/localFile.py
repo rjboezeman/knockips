@@ -29,8 +29,13 @@ class LocalFile(KnockIPBase):
             self.do_shutdown()
 
     async def process_log_line(log_line):
-        pass
+        log.debug('LocalFile process_log_line: ' + log_line)
+
+    async def take_action(self, output):
+        log.debug('LocalFile take_action: ' + output)
 
     async def run(self):
+        self.signup()
         await self.tail_log_file(log_file)
+        self.signout()
         

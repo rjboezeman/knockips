@@ -8,6 +8,7 @@ fastapi = "*"
 uvicorn = "*"
 aiofiles = "*"
 geoip2 = "*"
+pyroute2 = "*"
 
 [dev-packages]
 

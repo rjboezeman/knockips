@@ -21,7 +21,8 @@ class MultiQueue:
             while not queue.empty():
                 queue.get_nowait()
         else:
-            raise ValueError("Queue not found")
+            # signing out twice should not throw an error
+            pass
 
     async def get(self, queue):
         if queue in self.queues:
