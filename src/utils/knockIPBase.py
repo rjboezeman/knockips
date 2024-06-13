@@ -14,6 +14,8 @@ class KnockIPBase(ABC):
         self.shutdown_event = shutdown_event
         self.geo_ip_lookup = None
         self.log_processor = None
+        self.geo_ip_lookup = GeoIPLookup()
+        self.queue = None
 
     async def put(self, item):
         await self.multi_queue.put(item)
@@ -25,7 +27,8 @@ class KnockIPBase(ABC):
         self.queue = self.multi_queue.signup()
 
     def signout(self):
-        self.multi_queue.signout(self.queue)
+        if self.queue:
+            self.multi_queue.signout(self.queue)
         self.queue = None
 
     def is_shutting_down(self):
@@ -40,12 +43,6 @@ class KnockIPBase(ABC):
     
     # override this function in child class if needed.
     async def run(self):
-        try:
-            self.geo_ip_lookup = GeoIPLookup()
-        except FileNotFoundError as e:
-            log.error(f"Error: {e}")
-            await self.do_shutdown()
-            return
         self.signup()
         while not self.shutdown_event.is_set() or not self.multi_queue.empty(queue):
             log_line = await self.multi_queue.get(self.queue) # with peek we don't actually remove the item from the queue

@@ -26,3 +26,11 @@ spec:
         hostPath:
           path: /var/log/shorewall.log
           type: File
+      - name: geoip-country
+        hostPath:
+          path: /usr/share/GeoIP/GeoLite2-City.mmdb
+          type: File
+      - name: geoip-city
+        hostPath:
+          path: /usr/share/GeoIP/GeoLite2-Country.mmdb
+          type: File

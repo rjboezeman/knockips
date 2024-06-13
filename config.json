@@ -12,7 +12,7 @@
     "ipset_badguys": "badguys",
     "ipset_goodguys": "sshtrusted",
     "error_log_entry": "ERROR:ABORTNOWPLEASE",
-    "geo_ip_country_db": "GeoLite2-Country.mmdb",
-    "geo_ip_city_db": "GeoLite2-City.mmdb",
+    "geo_ip_country_db": "/usr/share/GeoIP/GeoLite2-Country.mmdb",
+    "geo_ip_city_db": "/usr/share/GeoIP/GeoLite2-City.mmdb",
     "knock_sequence" : [ 1234, 5678 ]
 }

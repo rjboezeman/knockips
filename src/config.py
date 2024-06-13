@@ -32,12 +32,12 @@ try:
     ERROR_LOG_ENTRY = config['error_log_entry']
     geo_ip_country_db = config['geo_ip_country_db']
     # check if file exists:
-    if not os.path.isfile(geo_ip_country_db):
+    if len(str(geo_ip_country_db)) > 0 and not os.path.isfile(geo_ip_country_db):
         print(f"Error: GeoIP country database '{geo_ip_country_db}' does not exist. Exiting...")
         exit(1)
     geo_ip_city_db = config['geo_ip_city_db']
     # check if file exists:
-    if not os.path.isfile(geo_ip_city_db):
+    if len(str(geo_ip_city_db)) > 0 and not os.path.isfile(geo_ip_city_db):
         print(f"Error: GeoIP city database '{geo_ip_city_db}' does not exist. Exiting...")
         exit(1)
     knock_sequence = config['knock_sequence']

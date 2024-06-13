@@ -10,6 +10,7 @@ class IPSetManager(KnockIPBase):
         super().__init__(multi_queue, shutdown_event)
         self.ipset = IPSet()
         self.knockers = {}
+        self.port_knocking_enabled = True
 
     def extract_ip_addresses(self, ipset_data):
         ip_addresses = []
@@ -36,6 +37,9 @@ class IPSetManager(KnockIPBase):
         log.debug(f"Knockers: {self.knockers}")
         source_ip = output['source_IP']
         target_port = output['target_PORT']
+        if self.port_knocking_enabled == False:
+            log.info(f"source_IP: {source_ip}, target_PORT: {target_port}  # (Port knocking disabled, ipsets not found)")
+            return
         knock_count = self.knockers.get(source_ip, {}).get('knock_count', 0)
 
         if source_ip in self.knockers:
@@ -68,12 +72,12 @@ class IPSetManager(KnockIPBase):
         self.all_ipset = self.ipset.list()
         self.ipset_list = [j[1] for i in self.all_ipset for j in i['attrs'] if j[0] == 'IPSET_ATTR_SETNAME']
         if((ipset_goodguys not in self.ipset_list) or (ipset_badguys not in self.ipset_list)):
-            log.error(f"Error: ipset '{ipset_goodguys}' and/or '{ipset_badguys}' not found in list of ipsets {self.ipset_list}. Exiting.")
-            await self.do_shutdown()
-            return
-        self.goodguys_list = self.extract_ip_addresses(self.ipset.list(ipset_goodguys))
-        self.badguys_list = self.extract_ip_addresses(self.ipset.list(ipset_badguys))
-        log.info(f"Number of goodguys: {len(self.goodguys_list)}")
-        log.info(f"Number of badguys: {len(self.badguys_list)}")
-        log.info(f"Knock sequence: {knock_sequence}")
+            log.error(f"Error: ipset '{ipset_goodguys}' and/or '{ipset_badguys}' not found in list of ipsets {self.ipset_list}. Skipping ipset actions.")
+            self.port_knocking_enabled = False
+        else:
+            self.goodguys_list = self.extract_ip_addresses(self.ipset.list(ipset_goodguys))
+            self.badguys_list = self.extract_ip_addresses(self.ipset.list(ipset_badguys))
+            log.info(f"Number of goodguys: {len(self.goodguys_list)}")
+            log.info(f"Number of badguys: {len(self.badguys_list)}")
+            log.info(f"Knock sequence: {knock_sequence}")
         await super().run()

@@ -2,15 +2,11 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from uvicorn import Config, Server
-from pydantic import BaseModel
 from utils.knockIPBase import KnockIPBase
 import logging
 from utils.logger import log, loglevel, handler
 from config import tcp_port, current_script_dir
 import asyncio
-
-class LogItem(BaseModel):
-    log_lines: list[str]
 
 class FastAPILogService(KnockIPBase):
 
@@ -22,7 +18,7 @@ class FastAPILogService(KnockIPBase):
         
         @self.app.get("/")
         async def read_root():
-            return FileResponse('static/index.html')
+            return FileResponse(f"{current_script_dir}/static/index.html")
 
         @self.app.websocket("/ws/logs")
         async def websocket_endpoint(websocket: WebSocket):
