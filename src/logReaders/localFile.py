@@ -26,7 +26,7 @@ class LocalFile(KnockIPBase):
                     await self.put(line.strip())
         except Exception as e:
             log.error(f"Error: {e}")
-            self.do_shutdown()
+            await self.do_shutdown()
 
     async def process_log_line(log_line):
         log.debug('LocalFile process_log_line: ' + log_line)

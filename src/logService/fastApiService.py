@@ -68,12 +68,16 @@ class FastAPILogService(KnockIPBase):
         
         # Run the server in a background task
         try:
-            server_task = asyncio.create_task(server.serve())
+            server_task = asyncio.create_task(server.serve(), name="UvicornServer")
             while not self.is_shutting_down():
                 await asyncio.sleep(1)
         except asyncio.exceptions.CancelledError:
-            log.error("Received cancelled error, shutting down...")
+            log.error("FastAPI received cancelled error, shutting down...")
+        except Exception as e:
+            log.error(f"Error: {e}")
         finally:
+            await self.do_shutdown()
+            await asyncio.sleep(1)
             server.should_exit = True
             await server_task
 
@@ -84,4 +88,9 @@ class FastAPILogService(KnockIPBase):
         log.debug('FastAPILogService take_action: ' + output)
 
     async def run(self):
-        await self.start_uvicorn()
+        try:
+            await self.start_uvicorn()
+        except Exception as e:
+            log.error(f"Error: {e}")
+            await self.do_shutdown()
+            return

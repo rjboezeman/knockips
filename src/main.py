@@ -4,7 +4,7 @@ import os
 import sys
 
 from logReaders.localFile import LocalFile
-from logConsumers.logShorewall import ShorewallLogger
+from logConsumers.logFirewall import FirewallLogger
 from logConsumers.manageIPset import IPSetManager
 from logService.fastApiService import FastAPILogService
 from config import log_file, shutdown_event, multi_queue, ERROR_LOG_ENTRY
@@ -18,19 +18,35 @@ async def main():
         return
 
     local_file = LocalFile(multi_queue, shutdown_event)
-    shorewall_logger = ShorewallLogger(multi_queue, shutdown_event)
+    shorewall_logger = FirewallLogger(multi_queue, shutdown_event)
     fast_api_service = FastAPILogService(multi_queue, shutdown_event)
     fast_api_service.set_log_processor(shorewall_logger)
     ipset_manager = IPSetManager(multi_queue, shutdown_event)
     ipset_manager.set_log_processor(shorewall_logger)
 
+    tasks = [
+        asyncio.create_task(local_file.run()),
+        asyncio.create_task(shorewall_logger.run()),
+        asyncio.create_task(fast_api_service.run()),
+        asyncio.create_task(ipset_manager.run())
+    ]
     
-    await asyncio.gather(
-        local_file.run(),
-        shorewall_logger.run(),
-        fast_api_service.run(),
-        ipset_manager.run()
-    )
+    try:
+        await asyncio.gather(*tasks)
+    except Exception as e:
+        log.error(f"An error occurred: {e}")
+    finally:
+        await shutdown(tasks)
+
+async def shutdown(tasks):
+    log.info("Shutting down...")
+    for task in tasks:
+        task.cancel()
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+    for result in results:
+        if isinstance(result, Exception):
+            log.error(f"Task raised an exception: {result}")
+    shutdown_event.set()
 
 if __name__ == "__main__":
     if os.geteuid() != 0:
@@ -43,6 +59,5 @@ if __name__ == "__main__":
         log.error("Received keyboard interrupt, shutting down...")
     except asyncio.exceptions.CancelledError:
         log.error("Received cancelled error, shutting down...")
-    finally:
-        log.info("Shutting down...")
-        shutdown_event.set()
+    except Exception as e:
+        log.error(f"An error occurred: {e}")

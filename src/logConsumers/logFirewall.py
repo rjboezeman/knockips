@@ -1,14 +1,13 @@
 from utils.knockIPBase import KnockIPBase
-from utils.geoiplookup import GeoIPLookup
 from utils.logger import log
 import re
 
 
 
-class ShorewallLogger(KnockIPBase):
+class FirewallLogger(KnockIPBase):
 
     async def process_log_line(self, log_line):
-        log.debug('ShorewallLogger process_log_line: ' + log_line)
+        log.debug('FirewallLogger process_log_line: ' + log_line)
         # Define the regular expression pattern to extract the required fields
         pattern = (
             r'SRC=(?P<source_IP>\d{1,3}(?:\.\d{1,3}){3}) '
@@ -30,4 +29,4 @@ class ShorewallLogger(KnockIPBase):
             return None
         
     async def take_action(self, output):
-        log.debug(f"ShorewallLogger take_action: Country: {output['country']}, City: {output['city']}, Source IP: {output['source_IP']}, Destination IP: {output['dest_IP']}, Source Port: {output['source_PORT']}, Destination Port: {output['target_PORT']}")
+        log.debug(f"FirewallLogger take_action: Country: {output['country']}, City: {output['city']}, Source IP: {output['source_IP']}, Destination IP: {output['dest_IP']}, Source Port: {output['source_PORT']}, Destination Port: {output['target_PORT']}")
