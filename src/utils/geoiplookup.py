@@ -26,7 +26,7 @@ class GeoIPLookup(metaclass=SingletonMeta):
         else:
             try:
                 self.country_reader = geoip2.database.Reader(country_db_path)
-                log.info('GeoIP country database loaded.')
+                log.info(f"GeoIP country database loaded: {country_db_path}")
             except Exception as e:
                 log.error(f"{e} Skipping country check.")
                 self.do_country = False
@@ -36,7 +36,7 @@ class GeoIPLookup(metaclass=SingletonMeta):
         else:
             try:
                 self.city_reader = geoip2.database.Reader(city_db_path)
-                log.info('GeoIP city database loaded.')
+                log.info(f"GeoIP city database loaded: {city_db_path}")
             except Exception as e:
                 log.error(f"{e} Skipping city check.")
                 self.do_city = False
@@ -66,4 +66,7 @@ class GeoIPLookup(metaclass=SingletonMeta):
             return 'Unknown'
 
     def close(self):
-        self.reader.close()
+        if self.do_country:
+            self.country_reader.close()
+        if self.do_city:
+            self.city_reader.close()

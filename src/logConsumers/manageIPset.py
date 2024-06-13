@@ -8,7 +8,11 @@ class IPSetManager(KnockIPBase):
     
     def __init__(self, multi_queue, shutdown_event):
         super().__init__(multi_queue, shutdown_event)
-        self.ipset = IPSet()
+        try:
+            self.ipset = IPSet()
+        except Exception as e:
+            log.error(f"Could not initialize IPSet: {e}")
+            self.port_knocking_enabled = False
         self.knockers = {}
         self.port_knocking_enabled = True
 
@@ -69,15 +73,20 @@ class IPSetManager(KnockIPBase):
 
     async def run(self):
         log.debug("IPSetManager run")
-        self.all_ipset = self.ipset.list()
-        self.ipset_list = [j[1] for i in self.all_ipset for j in i['attrs'] if j[0] == 'IPSET_ATTR_SETNAME']
-        if((ipset_goodguys not in self.ipset_list) or (ipset_badguys not in self.ipset_list)):
-            log.error(f"Error: ipset '{ipset_goodguys}' and/or '{ipset_badguys}' not found in list of ipsets {self.ipset_list}. Skipping ipset actions.")
+        try:
+            self.ipset = IPSet()
+            self.all_ipset = self.ipset.list()
+            self.ipset_list = [j[1] for i in self.all_ipset for j in i['attrs'] if j[0] == 'IPSET_ATTR_SETNAME']
+            if((ipset_goodguys not in self.ipset_list) or (ipset_badguys not in self.ipset_list)):
+                log.error(f"Error: ipset '{ipset_goodguys}' and/or '{ipset_badguys}' not found in list of ipsets {self.ipset_list}. Skipping ipset actions.")
+                self.port_knocking_enabled = False
+            else:
+                self.goodguys_list = self.extract_ip_addresses(self.ipset.list(ipset_goodguys))
+                self.badguys_list = self.extract_ip_addresses(self.ipset.list(ipset_badguys))
+                log.info(f"Number of goodguys: {len(self.goodguys_list)}")
+                log.info(f"Number of badguys: {len(self.badguys_list)}")
+                log.info(f"Knock sequence: {knock_sequence}")
+        except Exception as e:
+            log.error(f"Could not initialize IPSet: {e}")
             self.port_knocking_enabled = False
-        else:
-            self.goodguys_list = self.extract_ip_addresses(self.ipset.list(ipset_goodguys))
-            self.badguys_list = self.extract_ip_addresses(self.ipset.list(ipset_badguys))
-            log.info(f"Number of goodguys: {len(self.goodguys_list)}")
-            log.info(f"Number of badguys: {len(self.badguys_list)}")
-            log.info(f"Knock sequence: {knock_sequence}")
         await super().run()

@@ -13,14 +13,22 @@ spec:
       labels:
         app: knockips
     spec:
+      hostNetwork: true
       containers:
       - name: knockips-container
-        image: rjboezeman/knockips:v0.1
+        image: rjboezeman/knockips:v0.2.1
         ports:
         - containerPort: 8000
         volumeMounts:
         - name: shorewall-log
           mountPath: /var/log/shorewall.log
+        - name: geoip-country
+          mountPath: /usr/share/GeoIP/GeoLite2-Country.mmdb
+        - name: geoip-city
+          mountPath: /usr/share/GeoIP/GeoLite2-City.mmdb
+        securityContext:
+          capabilities:
+            add: [ "NET_ADMIN", "SYS_MODULE" ]
       volumes:
       - name: shorewall-log
         hostPath:
@@ -28,9 +36,9 @@ spec:
           type: File
       - name: geoip-country
         hostPath:
-          path: /usr/share/GeoIP/GeoLite2-City.mmdb
+          path: /usr/share/GeoIP/GeoLite2-Country.mmdb
           type: File
       - name: geoip-city
         hostPath:
-          path: /usr/share/GeoIP/GeoLite2-Country.mmdb
+          path: /usr/share/GeoIP/GeoLite2-City.mmdb
           type: File
