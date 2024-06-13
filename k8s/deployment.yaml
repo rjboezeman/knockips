@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: knockips-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: knockips
+  template:
+    metadata:
+      labels:
+        app: knockips
+    spec:
+      containers:
+      - name: knockips-container
+        image: knockips:v0.1
+        ports:
+        - containerPort: 8000
