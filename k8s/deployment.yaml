@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: knockips-deployment
+  namespace: knockips
 spec:
   replicas: 1
   selector:
@@ -14,6 +15,14 @@ spec:
     spec:
       containers:
       - name: knockips-container
-        image: knockips:v0.1
+        image: rjboezeman/knockips:v0.1
         ports:
         - containerPort: 8000
+        volumeMounts:
+        - name: shorewall-log
+          mountPath: /var/log/shorewall.log
+      volumes:
+      - name: shorewall-log
+        hostPath:
+          path: /var/log/shorewall.log
+          type: File

@@ -12,7 +12,7 @@ class KnockIPBase(ABC):
         log.debug(f"Initializing {self.__class__.__name__}")
         self.multi_queue = multi_queue
         self.shutdown_event = shutdown_event
-        self.geo_ip_lookup = GeoIPLookup()
+        self.geo_ip_lookup = None
         self.log_processor = None
 
     async def put(self, item):
@@ -40,6 +40,12 @@ class KnockIPBase(ABC):
     
     # override this function in child class if needed.
     async def run(self):
+        try:
+            self.geo_ip_lookup = GeoIPLookup()
+        except FileNotFoundError as e:
+            log.error(f"Error: {e}")
+            await self.do_shutdown()
+            return
         self.signup()
         while not self.shutdown_event.is_set() or not self.multi_queue.empty(queue):
             log_line = await self.multi_queue.get(self.queue) # with peek we don't actually remove the item from the queue
@@ -59,9 +65,15 @@ class KnockIPBase(ABC):
         self.signout()
     
     def get_country_by_ip(self, ip):
+        if not self.geo_ip_lookup:
+            log.debug('GeoIP lookup of country not available.')
+            return None
         return self.geo_ip_lookup.get_country_by_ip(ip)
 
     def get_city_by_ip(self, ip):
+        if not self.geo_ip_lookup:
+            log.debug('GeoIP lookup of city not available.')
+            return None
         return self.geo_ip_lookup.get_city_by_ip(ip)
 
     @abstractmethod

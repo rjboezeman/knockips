@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: debug-pod
+  namespace: knockips
+spec:
+  containers:
+  - name: debug-container
+    image: busybox
+    command: ['sh', '-c', 'tail -f /dev/null']
+    volumeMounts:
+    - name: shorewall-log
+      mountPath: /var/log/shorewall.log
+  volumes:
+  - name: shorewall-log
+    hostPath:
+      path: /var/log/shorewall.log
+      type: File

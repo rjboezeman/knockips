@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from utils.knockIPBase import KnockIPBase
 import logging
 from utils.logger import log, loglevel, handler
-from config import tcp_port
+from config import tcp_port, current_script_dir
 import asyncio
 
 class LogItem(BaseModel):
@@ -18,7 +18,7 @@ class FastAPILogService(KnockIPBase):
         super().__init__(multi_queue, shutdown_event)
         self.app = FastAPI()
         self.app.logger = log
-        self.app.mount("/static", StaticFiles(directory="static"), name="static")
+        self.app.mount(f"/static", StaticFiles(directory=f"{current_script_dir}/static"), name="static")
         
         @self.app.get("/")
         async def read_root():
@@ -71,11 +71,12 @@ class FastAPILogService(KnockIPBase):
             logger.propagate = False
         
         # Run the server in a background task
-        server_task = asyncio.create_task(server.serve())
-
         try:
+            server_task = asyncio.create_task(server.serve())
             while not self.is_shutting_down():
                 await asyncio.sleep(1)
+        except asyncio.exceptions.CancelledError:
+            log.error("Received cancelled error, shutting down...")
         finally:
             server.should_exit = True
             await server_task

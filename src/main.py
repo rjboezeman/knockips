@@ -41,4 +41,8 @@ if __name__ == "__main__":
         asyncio.run(main())
     except KeyboardInterrupt:
         log.error("Received keyboard interrupt, shutting down...")
+    except asyncio.exceptions.CancelledError:
+        log.error("Received cancelled error, shutting down...")
+    finally:
+        log.info("Shutting down...")
         shutdown_event.set()
