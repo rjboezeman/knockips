@@ -2,11 +2,16 @@ import json
 from json import JSONDecodeError
 import asyncio
 from utils.multiQueue import MultiQueue
+import os
 
 # Load configuration from JSON file
 # Reading configuration
+
 try:
-    with open('../config.json') as config_file:
+    current_script_dir = os.path.dirname(os.path.abspath(__file__))
+    config_file_path = os.path.join(current_script_dir, '../config.json')
+    print(f"Loading configuration from {config_file_path}")
+    with open(config_file_path) as config_file:
         config = json.load(config_file)
 except FileNotFoundError:
     print("Error: Configuration file not found. Exiting...")

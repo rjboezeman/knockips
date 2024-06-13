@@ -20,6 +20,7 @@ RUN pipenv install --system
 
 # Adding application files
 ADD src /app/src
+ADD config.json /app/
 
 EXPOSE 8000/tcp
-CMD ["python", "/src/main.py"]      
+CMD ["python", "/app/src/main.py"]      
