@@ -30,6 +30,7 @@ try:
     ipset_goodguys = config['ipset_goodguys']
     ipset_badguys = config['ipset_badguys']
     ERROR_LOG_ENTRY = config['error_log_entry']
+    sqllite_db = config['sqllite_db']
     geo_ip_country_db = config['geo_ip_country_db']
     # check if file exists:
     if len(str(geo_ip_country_db)) > 0 and not os.path.isfile(geo_ip_country_db):

@@ -30,3 +30,6 @@ class FirewallLogger(KnockIPBase):
         
     async def take_action(self, output):
         log.debug(f"FirewallLogger take_action: Country: {output['country']}, City: {output['city']}, Source IP: {output['source_IP']}, Destination IP: {output['dest_IP']}, Source Port: {output['source_PORT']}, Destination Port: {output['target_PORT']}")
+
+    async def cleanup(self):
+        log.debug('FirewallLogger cleanup')

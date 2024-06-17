@@ -38,4 +38,6 @@ class LocalFile(KnockIPBase):
         self.signup()
         await self.tail_log_file(log_file)
         self.signout()
-        
+    
+    async def cleanup(self):
+        pass

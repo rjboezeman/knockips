@@ -94,3 +94,6 @@ class FastAPILogService(KnockIPBase):
             log.error(f"Error: {e}")
             await self.do_shutdown()
             return
+    
+    async def cleanup(self):
+        log.debug("FastAPILogService cleanup")

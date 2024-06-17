@@ -60,6 +60,7 @@ class KnockIPBase(ABC):
             else:
                 log.error(f"Failed to process log line ({self.__class__.__name__}): {log_line}")
         self.signout()
+        await self.cleanup()
     
     def get_country_by_ip(self, ip):
         if not self.geo_ip_lookup:
@@ -79,4 +80,8 @@ class KnockIPBase(ABC):
 
     @abstractmethod
     async def take_action(self):
+        pass
+
+    @abstractmethod
+    async def cleanup(self):
         pass

@@ -6,6 +6,10 @@ __pycache__/
 # C extensions
 *.so
 
+# SQL database files
+*.sqlite3
+*.db
+
 # GeoIP database
 *.mmdb
 
