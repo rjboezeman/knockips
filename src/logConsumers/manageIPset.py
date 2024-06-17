@@ -93,11 +93,3 @@ class IPSetManager(KnockIPBase):
 
     async def cleanup(self):
         log.debug("IPSetManager cleanup")
-        if self.port_knocking_enabled:
-            try:
-                self.ipset.destroy(ipset_goodguys)
-                self.ipset.destroy(ipset_badguys)
-                log.info(f"Destroyed ipsets '{ipset_goodguys}' and '{ipset_badguys}'.")
-            except Exception as e:
-                log.error(f"Could not destroy ipsets: {e}")
-        log.info("IPSetManager cleanup complete")

@@ -47,7 +47,7 @@ class KnockIPBase(ABC):
         while not self.shutdown_event.is_set() or not self.multi_queue.empty(queue):
             log_line = await self.multi_queue.get(self.queue) # with peek we don't actually remove the item from the queue
             if log_line == ERROR_LOG_ENTRY:
-                log.error("Received error signal, shutting down...")
+                log.error(f"Received error signal ({self.__class__.__name__}), shutting down...")
                 self.shutdown_event.set()
                 break
             if self.log_processor:

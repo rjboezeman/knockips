@@ -2,6 +2,7 @@
 import asyncio
 import os
 import sys
+import signal
 
 from logReaders.localFile import LocalFile
 from logConsumers.logFirewall import FirewallLogger
@@ -45,10 +46,19 @@ async def main():
         # Await tasks to ensure they are properly cancelled
         await asyncio.gather(*tasks, return_exceptions=True)
 
+def handle_signal(signum, frame):
+    log.info(f"Received signal {signum}, shutting down...")
+    shutdown_event.set()
+
 if __name__ == "__main__":
     if os.geteuid() != 0:
         log.error("Error: This script must be run as root. Please restart the script with 'sudo' or as the root user.")
         sys.exit(1)
+
+    # Register signal handlers
+    signal.signal(signal.SIGTERM, handle_signal)
+    signal.signal(signal.SIGINT, handle_signal)  # Handle SIGINT (Ctrl+C) as well
+    signal.signal(signal.SIGHUP, handle_signal)  # Handle SIGHUP (sent by systemd when service is stopped/restarted)
 
     try:
         asyncio.run(main())

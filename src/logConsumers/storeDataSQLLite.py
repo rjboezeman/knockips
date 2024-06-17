@@ -11,14 +11,28 @@ class SQLLiteDataStore(KnockIPBase):
             # Initiate SQL Lite database:
             self.db = sqlite3.connect(sqllite_db)
             self.cursor = self.db.cursor()
+            self._configure_db()
             log.info(f"Connected to SQLite database successfully: {sqllite_db}")
         except sqlite3.Error as e:
             log.error(f"Failed to connect to SQLite database: {e}")
 
+    def _configure_db(self):
+        try:
+            # Set PRAGMA journal_mode to WAL for more predictable write behavior
+            self.cursor.execute('PRAGMA journal_mode=WAL;')
+            self.db.commit()
+            log.info("Database configured to use WAL mode.")
+        except sqlite3.Error as e:
+            log.error(f"Failed to configure database: {e}")
+
     async def cleanup(self):
         if self.db:
-            log.info(f"Closing SQLite database connection.")
-            self.db.close()
+            try:
+                log.info("Committing any pending transactions and closing SQLite database connection.")
+                self.db.commit()  # Ensure all transactions are committed
+                self.db.close()
+            except sqlite3.Error as e:
+                log.error(f"Failed to close SQLite database: {e}")
 
     def _create_table(self, columns):
         try:
@@ -61,7 +75,7 @@ class SQLLiteDataStore(KnockIPBase):
             self.cursor.execute(f'''
                 INSERT INTO data ({columns}) VALUES ({placeholders})
             ''', values)
-            self.db.commit()
+            self.db.commit()  # Ensure data is immediately written to the file
             log.debug(f"Data stored successfully: {data_dict}")
         except sqlite3.Error as e:
             log.error(f"Failed to insert data: {e}")

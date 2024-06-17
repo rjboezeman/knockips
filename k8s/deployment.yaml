@@ -47,4 +47,4 @@ spec:
       - name: sqllite-db
         hostPath:
           path: /tmp/firewall-logs.db
-          type: File
+          type: FileOrCreate
