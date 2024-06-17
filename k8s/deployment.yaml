@@ -26,7 +26,7 @@ spec:
           mountPath: /usr/share/GeoIP/GeoLite2-Country.mmdb
         - name: geoip-city
           mountPath: /usr/share/GeoIP/GeoLite2-City.mmdb
-        -name: sqllite-db
+        - name: sqllite-db
           mountPath: /tmp/firewall-logs.db
         securityContext:
           capabilities:
