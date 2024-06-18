@@ -3,17 +3,22 @@ from utils.knockIPBase import KnockIPBase
 from pyroute2 import IPSet
 from config import ipset_goodguys, ipset_badguys, knock_sequence
 from pyroute2.netlink.exceptions import NetlinkError
+import asyncio
+import datetime
 
 class IPSetManager(KnockIPBase):
     
     def __init__(self, multi_queue, shutdown_event):
         super().__init__(multi_queue, shutdown_event)
+        self.check_interval = 60 # in seconds
+        self.counter = 0
         try:
             self.ipset = IPSet()
         except Exception as e:
             log.error(f"Could not initialize IPSet: {e}")
             self.port_knocking_enabled = False
         self.knockers = {}
+        self.goodguys_list = []
         self.port_knocking_enabled = True
 
     def extract_ip_addresses(self, ipset_data):
@@ -35,6 +40,41 @@ class IPSetManager(KnockIPBase):
     async def process_log_line(self, log_line):
         log.debug('IPSetManager process_log_line: ' + log_line)
         return True
+    
+    async def update_ipsets(self):
+        while not self.shutdown_event.is_set():
+            try:
+                if self.counter < self.check_interval:
+                    self.counter += 1
+                    await asyncio.sleep(1)
+                else:
+                    self.counter = 0
+                    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    for item in self.goodguys_list:
+                        # change the if statement to already remove the item from the list if the timestamp is older than 1 minute:
+                        if (datetime.strptime(item[1], "%Y-%m-%d %H:%M:%S") - datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S")).total_seconds() > 60:
+                            try:
+                                self.ipset.delete(ipset_goodguys, item[0])
+                                self.goodguys_list.remove(item)
+                                log.info(f"IP address {item[0]} has been removed from ipset '{ipset_goodguys}'.")
+                            except NetlinkError as e:
+                                log.error(f"Error: IP address {item[0]} could not be removed from ipset '{ipset_goodguys}': {e}.")
+                            except Exception as e:
+                                log.error(f"Unknown error: {e}")                
+            except Exception as e:
+                log.error(f"Error: Could not update ipsets: {e}")
+                self.port_knocking_enabled = False
+
+    async def add_to_ipset(self, ipset_name, ip_address):
+        try:
+            self.ipset.add(ipset_name, ip_address)
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self.goodguys_list.append([ip_address, timestamp])
+            log.info(f"IP address {ip_address} has been added to ipset '{ipset_name}'.")
+        except NetlinkError as e:
+            log.error(f"Error: IP address {ip_address} could not be added to ipset '{ipset_name}': {e}.")
+        except Exception as e:
+            log.error(f"Unknown error: {e}")
 
     async def take_action(self, output):
         log.debug(f"IPSetManager take_action: {output}")
@@ -53,14 +93,7 @@ class IPSetManager(KnockIPBase):
                 if self.knockers[source_ip]['knock_count'] == len(knock_sequence):
                     log.info(f"Knocker {source_ip} has completed the knock sequence.")
                     self.knockers[source_ip]['knock_count'] = 0
-                    try:
-                        self.ipset.add(ipset_goodguys, source_ip)
-                        log.info(f"Knocker {source_ip} has been ADDED to ipset '{ipset_goodguys}'.")
-                        del self.knockers[source_ip]
-                    except NetlinkError as e:
-                        log.error(f"Error: Knocker {source_ip} could not be added to ipset '{ipset_goodguys}': {e}.")
-                    except Exception as e:
-                        log.error(f"Unknown error: {e}")
+                    self.add_to_ipset(ipset_goodguys, source_ip)
             else:
                 log.info(f"Knocker {source_ip} has FAILED the knock sequence at count: {knock_count}.")
                 del self.knockers[source_ip]
@@ -75,6 +108,7 @@ class IPSetManager(KnockIPBase):
         log.debug("IPSetManager run")
         try:
             self.ipset = IPSet()
+            asyncio.create_task(self.update_ipsets())
             self.all_ipset = self.ipset.list()
             self.ipset_list = [j[1] for i in self.all_ipset for j in i['attrs'] if j[0] == 'IPSET_ATTR_SETNAME']
             if((ipset_goodguys not in self.ipset_list) or (ipset_badguys not in self.ipset_list)):

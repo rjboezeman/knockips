@@ -20,7 +20,8 @@ except JSONDecodeError:
     print("Error: Configuration file is not valid JSON. Exiting...")
     exit(1)
 
-multi_queue = MultiQueue()
+log_multi_queue = MultiQueue()
+actor_multi_queue = MultiQueue()
 shutdown_event = asyncio.Event()
 
 try:
