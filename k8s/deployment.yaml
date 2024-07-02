@@ -16,7 +16,7 @@ spec:
       hostNetwork: true
       containers:
       - name: knockips-container
-        image: rjboezeman/knockips:v0.2.2
+        image: rjboezeman/knockips:v0.2.5
         ports:
         - containerPort: 8000
         volumeMounts:
