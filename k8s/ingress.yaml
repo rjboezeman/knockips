@@ -1,0 +1,14 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: knockips-ingress
+  namespace: knockips
+spec:
+  entryPoints:
+    - web
+  routes:
+  - match: Host(`router.boezeman.net`) && PathPrefix(`/`)
+    kind: Rule
+    services:
+    - name: knockips-service
+      port: 8000

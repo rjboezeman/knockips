@@ -3,6 +3,7 @@ from utils.logger import log
 import os
 import asyncio
 import aiofiles
+import time
 from config import log_file
 
 class LocalFile(KnockIPBase):
@@ -16,24 +17,28 @@ class LocalFile(KnockIPBase):
         try:
             current_inode = os.stat(log_file).st_ino
             async with aiofiles.open(log_file, mode='r') as f:
-                # Go to the end of the file:
-                await f.seek(0, 2)
+                await f.seek(0, 2)  # Move to the end of the file
                 while not self.shutdown_event.is_set():
-                    line = await f.readline()
-                    if not line:
+                    chunk = await f.read(1024)  # Read in small chunks
+                    if chunk:
+                        lines = chunk.splitlines(keepends=True)
+                        for line in lines:
+                            if line.endswith('\n'):
+                                await self.put(line.strip())
+                            else:
+                                await asyncio.sleep(0.5)
+                    else:
                         # Check if the file has been rotated
                         new_inode = os.stat(log_file).st_ino
                         if new_inode != current_inode:
                             log.warning(f"Log file '{log_file}' has been rotated. Reopening...")
                             current_inode = new_inode
-                            await f.close()
-                            break  # Break the inner loop to reopen the file
+                            break  # Break to reopen the file
                         await asyncio.sleep(0.5)
-                        continue
-                    await self.put(line.strip())
         except Exception as e:
             log.error(f"Error: {e}")
             await self.do_shutdown()
+
 
     async def process_log_line(self, log_line):
         log.debug('LocalFile process_log_line: ' + log_line)

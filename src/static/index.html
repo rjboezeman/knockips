@@ -51,6 +51,12 @@
             background-color: #f9f9f9;
         }
 
+        .opened {
+            color: green;
+            text-align: center;
+            margin: 20px 0;
+        }
+
         .closed {
             color: red;
             text-align: center;
@@ -104,6 +110,13 @@
             ws.onopen = function(event) {
                 document.getElementById("connect").disabled = true;
                 document.getElementById("disconnect").disabled = false;
+                let logsBody = document.getElementById("logs-body");
+                let log = document.createElement("tr");
+                let td = document.createElement("td");
+                td.textContent = "WebSocket connection opened.";
+                td.classList.add("opened");
+                log.appendChild(td);
+                logsBody.appendChild(log);
             };
 
             ws.onmessage = function(event) {
