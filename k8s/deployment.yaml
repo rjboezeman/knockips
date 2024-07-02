@@ -21,7 +21,7 @@ spec:
         - containerPort: 8000
         volumeMounts:
         - name: shorewall-log
-          mountPath: /var/log/shorewall.log
+          mountPath: /var/log/
         - name: geoip-country
           mountPath: /usr/share/GeoIP/GeoLite2-Country.mmdb
         - name: geoip-city
@@ -34,8 +34,8 @@ spec:
       volumes:
       - name: shorewall-log
         hostPath:
-          path: /var/log/shorewall.log
-          type: File
+          path: /var/log/
+          type: Directory
       - name: geoip-country
         hostPath:
           path: /usr/share/GeoIP/GeoLite2-Country.mmdb
