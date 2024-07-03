@@ -42,6 +42,11 @@ try:
     if len(str(geo_ip_city_db)) > 0 and not os.path.isfile(geo_ip_city_db):
         print(f"Error: GeoIP city database '{geo_ip_city_db}' does not exist. Exiting...")
         exit(1)
+    geo_ip_asn_db = config['geo_ip_asn_db']
+    # check if file exists:
+    if len(str(geo_ip_asn_db)) > 0 and not os.path.isfile(geo_ip_asn_db):
+        print(f"Error: GeoIP ASN database '{geo_ip_asn_db}' does not exist. Exiting...")
+        exit(1)
     knock_sequence = config['knock_sequence']
 except KeyError as e:
     print(f"Error: Missing configuration key in config.json: {e}")

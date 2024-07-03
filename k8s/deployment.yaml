@@ -16,7 +16,7 @@ spec:
       hostNetwork: true
       containers:
       - name: knockips-container
-        image: rjboezeman/knockips:v0.2.9
+        image: rjboezeman/knockips:v0.3.1
         ports:
         - containerPort: 8000
         volumeMounts:
@@ -26,6 +26,8 @@ spec:
           mountPath: /usr/share/GeoIP/GeoLite2-Country.mmdb
         - name: geoip-city
           mountPath: /usr/share/GeoIP/GeoLite2-City.mmdb
+        - name: geoip-asn
+          mountPath: /usr/share/GeoIP/GeoLite2-ASN.mmdb
         - name: sqllite-db
           mountPath: /tmp/firewall-logs.db
         securityContext:
@@ -43,6 +45,10 @@ spec:
       - name: geoip-city
         hostPath:
           path: /usr/share/GeoIP/GeoLite2-City.mmdb
+          type: File
+      - name: geoip-asn
+        hostPath:
+          path: /usr/share/GeoIP/GeoLite2-ASN.mmdb
           type: File
       - name: sqllite-db
         hostPath:

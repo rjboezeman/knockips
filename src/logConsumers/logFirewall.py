@@ -5,14 +5,14 @@ import re
 
 
 class FirewallLogger(KnockIPBase):
-
     async def process_log_line(self, log_line):
         log.debug('FirewallLogger process_log_line: ' + log_line)
         # Define the regular expression pattern to extract the required fields
         pattern = (
             r'SRC=(?P<source_IP>\d{1,3}(?:\.\d{1,3}){3}) '
             r'DST=(?P<dest_IP>\d{1,3}(?:\.\d{1,3}){3}) '
-            r'.* SPT=(?P<source_PORT>\d+) '
+            r'.* PROTO=(?P<protocol>\w+) '
+            r'SPT=(?P<source_PORT>\d+) '
             r'DPT=(?P<target_PORT>\d+)'
         )
         
@@ -24,6 +24,8 @@ class FirewallLogger(KnockIPBase):
             output = match.groupdict()
             output['country'] = self.get_country_by_ip(output['source_IP'])
             output['city'] = self.get_city_by_ip(output['source_IP'])
+            output['asn'] = self.get_asn_by_ip(output['source_IP'])
+            output['organization'] = self.get_asn_organization_by_ip(output['source_IP'])
             return output
         else:
             return None

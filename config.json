@@ -14,6 +14,7 @@
     "error_log_entry": "ERROR:ABORTNOWPLEASE",
     "geo_ip_country_db": "/usr/share/GeoIP/GeoLite2-Country.mmdb",
     "geo_ip_city_db": "/usr/share/GeoIP/GeoLite2-City.mmdb",
+    "geo_ip_asn_db": "/usr/share/GeoIP/GeoLite2-ASN.mmdb",
     "sqllite_db": "/tmp/firewall-logs.db",
     "knock_sequence" : [ 1234, 5678 ]
 }

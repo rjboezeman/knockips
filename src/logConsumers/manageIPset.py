@@ -90,6 +90,7 @@ class IPSetManager(KnockIPBase):
         log.debug(f"Knockers: {self.knockers}")
         source_ip = output['source_IP']
         target_port = output['target_PORT']
+        protocol = output['protocol']
         if self.port_knocking_enabled == False:
             log.info(f"source_IP: {source_ip}, target_PORT: {target_port}  # (Port knocking disabled, ipsets not found)")
             return
@@ -97,7 +98,7 @@ class IPSetManager(KnockIPBase):
 
         if source_ip in self.knockers:
             if target_port == str(knock_sequence[knock_count]):
-                log.info(f"Knocker {source_ip} has CONTINUED to knock on TCP port {target_port} with knock count: {knock_count}.")
+                log.info(f"Knocker {source_ip} has CONTINUED to knock on {protocol} port {target_port} with knock count: {knock_count}.")
                 self.knockers[source_ip]['knock_count'] += 1
                 if self.knockers[source_ip]['knock_count'] == len(knock_sequence):
                     log.info(f"Knocker {source_ip} has completed the knock sequence.")
@@ -110,7 +111,7 @@ class IPSetManager(KnockIPBase):
             log.info(f"Knocker {source_ip} has STARTED the knock sequence.")
             self.knockers[source_ip] = {'knock_count': 1}
         else:
-            log.info(f"Knocker {source_ip} has failed the knock sequence on TCP port {target_port}.")
+            log.info(f"Knocker {source_ip} has failed the knock sequence on {protocol} port {target_port}.")
 
 
     async def run(self):

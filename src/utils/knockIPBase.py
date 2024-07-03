@@ -73,6 +73,18 @@ class KnockIPBase(ABC):
             log.debug('GeoIP lookup of city not available.')
             return None
         return self.geo_ip_lookup.get_city_by_ip(ip)
+    
+    def get_asn_by_ip(self, ip):
+        if not self.geo_ip_lookup:
+            log.debug('GeoIP lookup of ASN not available.')
+            return None
+        return self.geo_ip_lookup.get_asn_by_ip(ip)
+
+    def get_asn_organization_by_ip(self, ip):
+        if not self.geo_ip_lookup:
+            log.debug('GeoIP lookup of ASN organization not available.')
+            return None
+        return self.geo_ip_lookup.get_asn_organization_by_ip(ip)
 
     @abstractmethod
     async def process_log_line(self):

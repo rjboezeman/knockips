@@ -16,17 +16,23 @@ class LocalFile(KnockIPBase):
 
         try:
             current_inode = os.stat(log_file).st_ino
+            buffer = ""
             async with aiofiles.open(log_file, mode='r') as f:
                 await f.seek(0, 2)  # Move to the end of the file
                 while not self.shutdown_event.is_set():
                     chunk = await f.read(1024)  # Read in small chunks
                     if chunk:
-                        lines = chunk.splitlines(keepends=True)
-                        for line in lines:
+                        buffer += chunk
+                        lines = buffer.splitlines(keepends=True)
+                        buffer = ""  # Clear the buffer to handle all lines in the chunk
+                        for i, line in enumerate(lines):
                             if line.endswith('\n'):
                                 await self.put(line.strip())
                             else:
-                                await asyncio.sleep(0.5)
+                                buffer = line  # Save the incomplete line to buffer
+                                break
+                        else:
+                            buffer = ""  # Clear buffer if all lines were complete
                     else:
                         # Check if the file has been rotated
                         new_inode = os.stat(log_file).st_ino
